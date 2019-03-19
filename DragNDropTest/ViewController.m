@@ -103,6 +103,11 @@
         
         CGRect newFrame = CGRectOffset(self.draggingView.frame, (point.x - previousLocation.x), (point.y - previousLocation.y));
         
+        NSLog(@"%f, %f",point.x,point.y);
+        
+        CGFloat origX = newFrame.origin.x;
+        CGFloat origY = newFrame.origin.y;
+        
         if (newFrame.origin.x < 0) {
             newFrame.origin.x = 0;
         } else if (newFrame.origin.x + newFrame.size.width > parentFrame.size.width) {
@@ -126,7 +131,8 @@
             
         }
         
-        self.draggingView.frame = newFrame;
+        if (origX != newFrame.origin.x || origY != newFrame.origin.y)
+            self.draggingView.frame = newFrame;
         
         //NSLog(@"%f",testScreenHeight);
     
