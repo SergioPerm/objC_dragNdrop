@@ -11,6 +11,7 @@
 @interface ViewController ()
 
 @property (weak, nonatomic) UIView* draggingView;
+@property (assign, nonatomic) CGPoint touchDeltaPoint;
 
 @end
 
@@ -55,7 +56,21 @@
     UIView* view = [self.view hitTest:pointOnMainView withEvent:event];
     
     if (![view isEqual:self.view]) {
+        
         self.draggingView = view;
+        
+        CGPoint touchPoint = [touch locationInView:self.draggingView];
+        
+        self.touchDeltaPoint = CGPointMake(CGRectGetMidX(self.draggingView.bounds) - touchPoint.x,
+                                           CGRectGetMidY(self.draggingView.bounds) - touchPoint.y);
+        
+        [self.draggingView.layer removeAllAnimations];
+        [UIView animateWithDuration:0.3
+                         animations:^{
+                             self.draggingView.transform = CGAffineTransformMakeScale(1.2f, 1.2f);
+                             self.draggingView.alpha = 0.3f;
+                         }];
+        
     } else {
         self.draggingView = nil;
     }
@@ -74,20 +89,40 @@
         UITouch* touch = [touches anyObject];
         
         CGPoint point = [touch locationInView:self.view];
-        self.draggingView.center = point;
+        
+        CGPoint correction = CGPointMake(point.x + self.touchDeltaPoint.x, point.y + self.touchDeltaPoint.y);
+        
+        self.draggingView.center = correction;
         
     }
     
 }
 
-- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(nullable UIEvent *)event{
-    [self logTouches:touches withMethod:@"touchesEnded"];
+- (void) onTouchesEnded {
+    
+    [UIView animateWithDuration:0.3
+                     animations:^{
+                         self.draggingView.transform = CGAffineTransformIdentity;
+                         self.draggingView.alpha = 1.0f;
+                     }];
+    
     self.draggingView = nil;
+    
+}
+
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(nullable UIEvent *)event{
+    
+    [self logTouches:touches withMethod:@"touchesEnded"];
+    
+    [self onTouchesEnded];
 }
 
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(nullable UIEvent *)event{
+    
     [self logTouches:touches withMethod:@"touchesCancelled"];
-    self.draggingView = nil;
+    
+    [self onTouchesEnded];
+
 }
 
 @end
