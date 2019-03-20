@@ -34,14 +34,14 @@
 
 - (void) logTouches:(NSSet*)touches withMethod:(NSString*) methodName {
     
-    NSMutableString* string = [NSMutableString stringWithString:methodName];
-    
-    for (UITouch* touch in touches) {
-        CGPoint point = [touch locationInView:self.view];
-        [string appendFormat:@" %@", NSStringFromCGPoint(point)];
-    }
-    
-    NSLog(@"%@", string);
+//    NSMutableString* string = [NSMutableString stringWithString:methodName];
+//
+//    for (UITouch* touch in touches) {
+//        CGPoint point = [touch locationInView:self.view];
+//        [string appendFormat:@" %@", NSStringFromCGPoint(point)];
+//    }
+//
+//    NSLog(@"%@", string);
 }
 
 #pragma mark - Touches
@@ -86,13 +86,50 @@
     
     if (self.draggingView) {
         
+        CGRect parentFrame = [self.view bounds];
+        
         UITouch* touch = [touches anyObject];
         
         CGPoint point = [touch locationInView:self.view];
         
-        CGPoint correction = CGPointMake(point.x + self.touchDeltaPoint.x, point.y + self.touchDeltaPoint.y);
+        CGFloat correctionX = point.x + self.touchDeltaPoint.x;
+        CGFloat correctionY = point.y + self.touchDeltaPoint.y;
+        
+        CGPoint correction = CGPointMake(correctionX, correctionY);
         
         self.draggingView.center = correction;
+        
+        CGPoint previousLocation = [touch previousLocationInView:self.view];
+        
+        CGRect newFrame = CGRectOffset(self.draggingView.frame, (point.x - previousLocation.x), (point.y - previousLocation.y));
+        
+        if (newFrame.origin.x < 0) {
+            newFrame.origin.x = 0;
+        } else if (newFrame.origin.x + newFrame.size.width > parentFrame.size.width) {
+            
+            // if the right edge would be outside the superview (dragging right),
+            // set the new origin.x to the width of the superview - the width of this view
+            newFrame.origin.x = parentFrame.size.width - self.draggingView.frame.size.width;
+        }
+        
+        if (newFrame.origin.y < 0) {
+            
+            // if the new top edge would be outside the superview (dragging up),
+            // set the new origin.y to Zero
+            newFrame.origin.y = 0;
+            
+        } else if (newFrame.origin.y + newFrame.size.height > parentFrame.size.height) {
+            
+            // if the new bottom edge would be outside the superview (dragging down),
+            // set the new origin.y to the height of the superview - the height of this view
+            newFrame.origin.y = parentFrame.size.height - self.draggingView.frame.size.height;
+            
+        }
+        
+        self.draggingView.frame = newFrame;
+        
+        //NSLog(@"%f",testScreenHeight);
+    
         
     }
     
